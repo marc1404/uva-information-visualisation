@@ -1,7 +1,7 @@
 {
-  "name": "uva-information-visualisation",
+  "name": "weather-assignment",
   "version": "0.0.1",
-  "description": "Information Visualisation at University of Amsterdam",
+  "description": "Information Visualisation at University of Amsterdam.",
   "repository": "https://github.com/marc1404/uva-information-visualisation.git",
   "author": "Marc Vornetran <marc.vornetran@gmail.com>",
   "license": "MIT",
