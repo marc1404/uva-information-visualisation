@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>JavaScript Test</title>
+    </head>
+    <body>
+        <p>
+            <strong>Q1</strong><br>
+            What are the possible ways to compare two variables in JavaScript?<br>
+            - Equality: <code>==</code><br>
+            - Inequality: <code>!=</code><br>
+            - Identity / strict equality: <code>===</code><br>
+            - Non-identity / strict inequality: <code>!==</code><br>
+            - Greater than: <code>&gt;</code><br>
+            - Greater than or equal: <code>&gt;=</code><br>
+            - Less than: <code>&lt;</code><br>
+            - Less than or equal: <code>&lt;=</code><br>
+            <br>
+            Can variables with the same value still not be equal?<br>
+            <strong>Yes</strong>, two variables can hold the same values but have different types e.g. <code>1 === '1' -&gt; false</code><br>
+            Furthermore, two variables can hold the the same value and be of the same type (Object in the example) but reference different objects e.g. <code>new String('foo') === new String('foo') -&gt; false</code>
+        </p>
+
+        <p>
+            <strong>Q2</strong><br>
+            <code>"number"</code><br>
+            The IIFE executes the function it receives as a parameter which returns 1.<br>
+            It proceeds by returning the <code>typeof 1</code> which is <code>"number"</code>
+        </p>
+
+        <script src="main.js"></script>
+    </body>
+</html>

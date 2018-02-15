@@ -7,7 +7,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "serve": "serve"
+    "serve": "serve --open"
   },
   "dependencies": {
     "serve": "6.4.9"
