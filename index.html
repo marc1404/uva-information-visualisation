@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Spectacular Visualisation</title>
+    </head>
+    <body>
+        <script src="/assets/d3.min.js"></script>
+        <script>
+            d3.csv('/assets/meteo.csv', data => {
+                const transformed = transformData(data);
+
+                console.log(transformed);
+            });
+
+            const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+            const width = 500;
+            const height = 200;
+            const barWidth = 20;
+            const colorScale = d3.scaleLinear()
+                .domain([0, d3.max(data)])
+                .range([0, 255]);
+
+            const svg = d3.select('body')
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height);
+
+            updateData(data);
+
+            function updateData(data) {
+                updateBars(data);
+                updateText(data);
+            }
+
+            function updateBars(data) {
+                const rect = svg.selectAll('rect')
+                    .data(data);
+
+                rect.enter()
+                    .append('rect')
+                    .attr('x', (d, i) => {
+                        return i * barWidth * 2;
+                    })
+                    .attr('y', d => {
+                        return height - d * 10;
+                    })
+                    .attr('width', barWidth)
+                    .attr('height', d => {
+                        return d * 10;
+                    })
+                    .attr('fill', d => {
+                        const green = 255 - Math.round(colorScale(d));
+
+                        return `rgb(255, ${green}, 0)`;
+                    });
+
+                rect.exit()
+                    .remove();
+            }
+
+            function updateText(data) {
+                const text = svg.selectAll('text')
+                    .data(data);
+
+                text.enter()
+                    .append('text')
+                    .text(d => d)
+                    .attr('x', (d, i) => {
+                        return i * barWidth * 2 + 10;
+                    })
+                    .attr('y', d => {
+                        return height - (d * 10) + 14;
+                    })
+                    .attr('font-family', 'sans-serif')
+                    .attr('text-anchor', 'middle');
+
+                text.exit()
+                    .remove();
+            }
+
+            function transformData(data) {
+                return d3.nest()
+                    .key(d => d.year)
+                    .rollup(year => transformYear(year))
+                    .entries(data);
+            }
+
+            function transformYear(year) {
+                return d3.nest()
+                    .key(d => d.month)
+                    .rollup(d => {
+                        return d3.mean(d, d => (+d.temperature) / 10);
+                    })
+                    .entries(year);
+            }
+        </script>
+    </body>
+</html>

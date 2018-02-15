@@ -1,0 +1,15 @@
+{
+  "name": "uva-information-visualisation",
+  "version": "0.0.1",
+  "description": "Information Visualisation at University of Amsterdam",
+  "repository": "https://github.com/marc1404/uva-information-visualisation.git",
+  "author": "Marc Vornetran <marc.vornetran@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "serve": "serve"
+  },
+  "dependencies": {
+    "serve": "6.4.9"
+  }
+}
