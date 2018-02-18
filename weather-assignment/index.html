@@ -1,133 +1,233 @@
 <!doctype html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <title>Spectacular Visualisation</title>
-    </head>
-    <body>
-        <script src="assets/d3.min.js"></script>
-        <script>
-            const width = 800;
-            const height = 400;
-            const barWidth = 40;
-            const barHeight = 20;
-            const colorScale = d3.scaleLinear()
-                .domain([0, 30])
-                .range([0, 255]);
-            const svg = initChart();
+<head>
+    <meta charset="utf-8">
+    <title>Spectacular Visualisation</title>
+</head>
+<body>
+<script src="assets/d3.min.js"></script>
+<script>
+    (() => {
+        const width = 1200;
+        const height = 600;
+        const barWidth = 40;
+        const barHeight = 20;
+        const paddingLeft = 40;
+        const colorScale = d3.scaleLinear()
+            .domain([0, 30])
+            .range([0, 255]);
+        const svg = createChart();
+        let currentIndex = 0;
+        let yAxisElement = null;
 
-            d3.csv('assets/meteo.csv', data => {
-                const transformed = transformData(data);
-                let i = 0;
+        d3.csv('assets/meteo.csv', data => {
+            const years = transformData(data);
 
-                window.test = () => {
-                    const year = transformed[i++];
-                    const data = year.value.map(entry => entry.value.toFixed(1));
+            updateData(years[currentIndex]);
 
-                    console.log(data);
-                    updateData(data);
-                };
+            d3.select('body').on('keydown', () => {
+                const { event } = d3;
 
-                window.test();
+                handleKeydown(event, years);
             });
+        });
 
-            function initChart() {
-                return d3.select('body')
-                    .append('svg')
-                    .attr('width', width)
-                    .attr('height', height);
+        function createChart() {
+            return d3.select('body')
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height);
+        }
+
+        function updateData(year) {
+            const data = year.value.map(entry => +entry.value.toFixed(1));
+            const scale = d3.scaleLinear()
+                .domain([0, d3.max(data)])
+                .range([0, height - 20]);
+
+            updateBars(data, scale);
+            updateTemperatures(data, scale);
+            updateMonths(data);
+            updateYear(year.key);
+            updateYAxis(data, scale);
+        }
+
+        function updateBars(data, scale) {
+            const rectSelection = svg.selectAll('rect.bar')
+                .data(data);
+
+            const rectElements = rectSelection.enter()
+                .append('rect')
+                .attr('y', height)
+                .attr('class', 'bar')
+                .merge(rectSelection);
+
+            rectElements
+                .data(data)
+                .attr('x', (d, i) => {
+                    return i * barWidth * 2 + paddingLeft;
+                })
+                .transition()
+                .duration(1000)
+                .attr('y', d => {
+                    return height - scale(d) - 20;
+                })
+                .attr('width', barWidth)
+                .attr('height', d => {
+                    return scale(d);
+                })
+                .attr('fill', d => {
+                    const green = 255 - Math.round(colorScale(d));
+
+                    return `rgb(255, ${green}, 0)`;
+                });
+
+            rectSelection.exit()
+                .remove();
+        }
+
+        function updateTemperatures(data, scale) {
+            const textSelection = svg.selectAll('text.temperature')
+                .data(data);
+
+            const textElements = textSelection.enter()
+                .append('text')
+                .attr('y', height)
+                .attr('class', 'temperature')
+                .attr('font-family', 'sans-serif')
+                .attr('text-anchor', 'middle')
+                .merge(textSelection);
+
+            textElements
+                .attr('x', (d, i) => {
+                    return i * barWidth * 2 + barWidth / 2 + paddingLeft;
+                })
+                .transition()
+                .duration(1000)
+                .tween('text', function tween(d) {
+                    const textElement = d3.select(this);
+                    const interpolation = d3.interpolateNumber(textElement.text(), d);
+
+                    return t => {
+                        textElement.text(interpolation(t).toFixed(1));
+                    };
+                })
+                .attr('y', d => {
+                    return height - scale(d) + barHeight - 20;
+                });
+
+            textSelection.exit()
+                .remove();
+        }
+
+        function updateMonths() {
+            const data = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const text = svg.selectAll('text.month')
+                .data(data);
+
+            text.enter()
+                .append('text')
+                .attr('class', 'month')
+                .text(d => d)
+                .attr('x', (d, i) => {
+                    return i * barWidth * 2 + barWidth / 2 + paddingLeft;
+                })
+                .attr('y', height - 5)
+                .attr('font-family', 'sans-serif')
+                .attr('text-anchor', 'middle');
+
+            text.exit()
+                .remove();
+        }
+
+        function updateYear(year) {
+            const textSelection = svg.selectAll('text.year')
+                .data([year]);
+
+            const textElement = textSelection.enter()
+                .append('text')
+                .attr('class', 'year')
+                .attr('font-family', 'sans-serif')
+                .attr('font-weight', 'bold')
+                .attr('font-size', '30px')
+                .attr('x', paddingLeft)
+                .attr('y', 30)
+                .merge(textSelection);
+
+            textElement.
+                text(d => d);
+
+            textSelection.exit()
+                .remove();
+        }
+
+        function updateYAxis(data) {
+            const scale = d3.scaleLinear()
+                .domain([d3.max(data), 0])
+                .range([0, height - 20]);
+            const yAxis = d3.axisLeft(scale);
+
+            if (!yAxisElement) {
+                yAxisElement = svg.append('g')
+                    .attr('transform', 'translate(20, 0)')
+                    .attr('class', 'y-axis')
+                    .call(yAxis);
             }
 
-            function updateData(data) {
-                updateBars(data);
-                updateTemperatures(data);
-                updateMonths(data);
+            svg.select('g.y-axis')
+                .transition()
+                .duration(1000)
+                .call(yAxis);
+        }
+
+        function transformData(data) {
+            return d3.nest()
+                .key(d => d.year)
+                .rollup(year => transformYear(year))
+                .entries(data);
+        }
+
+        function transformYear(year) {
+            return d3.nest()
+                .key(d => d.month)
+                .rollup(d => {
+                    return d3.mean(d, d => (+d.temperature) / 10);
+                })
+                .entries(year);
+        }
+
+        function handleKeydown(event, years) {
+            if (event.repeat) {
+                return;
             }
 
-            function updateBars(data) {
-                const rect = svg.selectAll('rect.bar')
-                    .data(data);
+            let indexModifier = 0;
 
-                rect.enter()
-                    .append('rect')
-                    .attr('class', 'bar')
-                    .attr('x', (d, i) => {
-                        return i * barWidth * 2;
-                    })
-                    .attr('y', d => {
-                        return height - d * barHeight - 20;
-                    })
-                    .attr('width', barWidth)
-                    .attr('height', d => {
-                        return d * barHeight;
-                    })
-                    .attr('fill', d => {
-                        const green = 255 - Math.round(colorScale(d));
-
-                        return `rgb(255, ${green}, 0)`;
-                    });
-
-                rect.exit()
-                    .remove();
+            if (event.key === 'ArrowLeft') {
+                indexModifier = -1;
             }
 
-            function updateTemperatures(data) {
-                const text = svg.selectAll('text.temperature')
-                    .data(data);
-
-                text.enter()
-                    .append('text')
-                    .attr('class', 'temperature')
-                    .attr('x', (d, i) => {
-                        return i * barWidth * 2 + barWidth / 2;
-                    })
-                    .attr('y', d => {
-                        return height - (d * barHeight) + barHeight - 20;
-                    })
-                    .attr('font-family', 'sans-serif')
-                    .attr('text-anchor', 'middle')
-                    .merge(text)
-                    .text(d => d);
-
-                text.exit()
-                    .remove();
+            if (event.key === 'ArrowRight') {
+                indexModifier = 1;
             }
 
-            function updateMonths(data) {
-                const text = svg.selectAll('text.month')
-                    .data(data);
-                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-                text.enter()
-                    .append('text')
-                    .attr('class', 'month')
-                    .text((d, i) => months[i])
-                    .attr('x', (d, i) => {
-                        return i * barWidth * 2 + barWidth / 2;
-                    })
-                    .attr('y', height - 5)
-                    .attr('font-family', 'sans-serif')
-                    .attr('text-anchor', 'middle');
-
-                text.exit()
-                    .remove();
+            if (indexModifier === 0) {
+                return;
             }
 
-            function transformData(data) {
-                return d3.nest()
-                    .key(d => d.year)
-                    .rollup(year => transformYear(year))
-                    .entries(data);
+            currentIndex += indexModifier;
+
+            if (currentIndex < 0) {
+                currentIndex = years.length - 1;
             }
 
-            function transformYear(year) {
-                return d3.nest()
-                    .key(d => d.month)
-                    .rollup(d => {
-                        return d3.mean(d, d => (+d.temperature) / 10);
-                    })
-                    .entries(year);
+            if (currentIndex >= years.length) {
+                currentIndex = 0;
             }
-        </script>
-    </body>
+
+            updateData(years[currentIndex]);
+        }
+    })();
+</script>
+</body>
 </html>
